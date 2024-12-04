@@ -58,9 +58,19 @@ void searchAppointmentByDoctor(const string& doctorId);
 void menu();
 
 // Helper function to write length indicator and delimited fields without newline
-void writeDelimitedRecord(fstream &file, const string& record) {
-    file << record.length() << "|" << record; 
+void writeDelimitedRecord(fstream &file, const string& record, size_t availableSize) {
+    string newRecord = to_string(record.length()) + "|" + record;
+
+    // Pad the record with spaces or zeros to completely overwrite the deleted space
+    if (newRecord.size() < availableSize) {
+        newRecord.append(availableSize - newRecord.size(), ' '); 
+        cout<<"New Record"<<newRecord<<"\n"; // Fill remaining space
+    } 
+
+    // Write the record to the file
+    file.write(newRecord.c_str(), newRecord.size());
 }
+
 
 // Helper function to read a delimited record
 string readDelimitedRecord(fstream &file) {
@@ -247,10 +257,23 @@ void addDoctor() {
         return;
     }
 
-    fstream file(DOCTOR_FILE, ios::in | ios::out | ios::app);
+    fstream file(DOCTOR_FILE, ios::in | ios::out);
     if (!file) {
         cerr << "Failed to open doctor file.\n";
         return;
+    }
+    string doctorRecord = doctor.id + "|" + doctor.name + "|" + doctor.address + "|";
+    for(auto it = doc_availList.begin(); it != doc_availList.end(); ++it) {
+        if(it->second >= doctorRecord.size()) {
+            file.seekp(it->first);
+            cout<<"Avail List entered "<<file.tellp()<<endl;
+            string str = to_string(it->second);
+            writeDelimitedRecord(file, doctorRecord, it->second+str.size()+1);
+            doctorPrimaryIndex[doctor.id] = it->first;
+            doctorSecondaryIndex[doctor.name].push_back(doctor.id);
+            doc_availList.erase(it);
+            return;
+        }
     }
 
     file.seekp(0, ios::end);
@@ -261,8 +284,7 @@ void addDoctor() {
     doctorSecondaryIndex[doctor.name].push_back(doctor.id);
 
     // Write to file (Delimited format without newline)
-    string doctorRecord = doctor.id + "|" + doctor.name + "|" + doctor.address + "|";
-    writeDelimitedRecord(file, doctorRecord);
+    writeDelimitedRecord(file, doctorRecord, doctorRecord.size());
     file.close();
     cout << "Doctor added successfully.\n";
 }
@@ -306,10 +328,28 @@ void addAppointment() {
 
     // Write to file (Delimited format with length prefix)
     string appointmentRecord = appointment.id + "|" + appointment.date + "|" + appointment.doctorId + "|";
-    writeDelimitedRecord(file, appointmentRecord);
+    writeDelimitedRecord(file, appointmentRecord, appointmentRecord.size());
     file.close();
 
     cout << "Appointment added successfully.\n";
+}
+
+int binarySearch(const map<long, size_t>& index, int id) {
+    long start = 0;
+    long end = index.size() - 1;
+    while (start <= end) {
+        long mid = start + (end - start) / 2;
+        if (id == mid) {
+            return index.at(mid);
+        }
+        else if (id > mid) {
+            start = mid + 1;
+        }
+        else {
+            end = mid - 1;
+        }
+    }
+    return -1;
 }
 
 
@@ -443,19 +483,27 @@ void deleteDoctor(const string& doctorId) {
     file.put('|');        // Write the delimiter back
     file.write(doctorRecord.c_str(), doctorRecord.size()); // Write the record back
     doctorPrimaryIndex.erase(doctorId);
+    // Remove the doctor from the secondary index (by name)
     for (auto& entry : doctorSecondaryIndex) {
-        entry.second.erase(remove(entry.second.begin(), entry.second.end(), doctorId), entry.second.end());
-        if(entry.second.empty()){
-            doctorSecondaryIndex.erase(entry.first);
+        vector<string>& ids = entry.second;
+        auto it = find(ids.begin(), ids.end(), doctorId);
+        if (it != ids.end()) {
+            ids.erase(it);  // Remove the doctor ID from the list
+
+            // If no IDs are left, delete the entry from the secondary index
+            if (ids.empty()) {
+                doctorSecondaryIndex.erase(entry.first);
+            }
+            break;  // Exit the loop once the doctor ID is found and removed
         }
     }
 
     // Update doc_availList with new length after marking it as deleted
-    size_t recordLength = doctorRecord.length() -1; // Include the added '*'
-    doc_availList[position] = recordLength;
+    size_t recordLength = doctorRecord.length(); // Include the added '*'
+    doc_availList[position] = recordLength + 1;
 
     file.close();
-    cout << "Appointment deleted successfully.\n";
+    cout << "Doctor deleted successfully.\n";
 }
 
 void deleteAppointment(const string& appointmentId) {
@@ -495,15 +543,22 @@ void deleteAppointment(const string& appointmentId) {
     file.write(appRecord.c_str(), appRecord.size()); // Write the record back
     appointmentPrimaryIndex.erase(appointmentId);
     for (auto& entry : appointmentSecondaryIndex) {
-        entry.second.erase(remove(entry.second.begin(), entry.second.end(), appointmentId), entry.second.end());
-        if(entry.second.empty()){
-            appointmentSecondaryIndex.erase(entry.first);
+        vector<string>& ids = entry.second;
+        auto it = find(ids.begin(), ids.end(), appointmentId);
+        if (it != ids.end()) {
+            ids.erase(it);  // Remove the doctor ID from the list
+
+            // If no IDs are left, delete the entry from the secondary index
+            if (ids.empty()) {
+                appointmentSecondaryIndex.erase(entry.first);
+            }
+            break;  // Exit the loop once the doctor ID is found and removed
         }
     }
 
     // Update doc_availList with new length after marking it as deleted
-    size_t recordLength = appRecord.length() -1; // Include the added '*'
-    app_availList[position] = recordLength;
+    size_t recordLength = appRecord.length(); // Include the added '*'
+    app_availList[position] = recordLength + 1;
 
     file.close();
     cout << "Appointment deleted successfully.\n";
