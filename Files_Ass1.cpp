@@ -670,6 +670,327 @@ void updateAppointmentDate(const string& appointmentId) {
     file.close();
     cout << "Appointment date updated successfully.\n";
 }
+void trim(string& str) {
+    str.erase(0, str.find_first_not_of(" \t\n\r"));
+    str.erase(str.find_last_not_of(" \t\n\r") + 1);
+}
+void getdate(const string& appointmentId) {
+    fstream file(APP_FILE);
+    if (!file) {
+        cerr << "Failed to open appointment file.\n";
+        return;
+    }
+
+    if (appointmentPrimaryIndex.find(appointmentId) == appointmentPrimaryIndex.end()) {
+        cout << "Appointment not found.\n";
+        return;
+    }
+
+    long position = appointmentPrimaryIndex[appointmentId];
+    file.seekg(position);
+
+    string appointmentRecord = readDelimitedRecord(file);
+    if (!appointmentRecord.empty()) {
+        istringstream iss(appointmentRecord);
+        string id, date, doctorId;
+        getline(iss, id, '|');
+        getline(iss, date, '|');
+        getline(iss, doctorId, '|');
+
+        cout << "doctor id: " << id << "\n"
+             << "Date: " << date << "\n";
+
+    }
+
+    file.close();
+}
+void getmultipledates(const string& doctorId) {
+    if (appointmentSecondaryIndex.find(doctorId) == appointmentSecondaryIndex.end()) {
+        cout << "No appointments found for Doctor ID: " << doctorId << endl;
+        return;
+    }
+
+    cout << "Appointments for Doctor ID " << doctorId << ":\n";
+    for (const string& appointmentId : appointmentSecondaryIndex[doctorId]) {
+        getdate(appointmentId);
+    }
+}
+void getIDs(const string& doctorId) {
+    fstream file(DOCTOR_FILE);
+    if (!file) {
+        cerr << "Failed to open doctor file.\n";
+        return;
+    }
+
+    if (doctorPrimaryIndex.find(doctorId) == doctorPrimaryIndex.end()) {
+        cout << "Doctor not found.\n";
+        return;
+    }
+
+    long position = doctorPrimaryIndex[doctorId];
+    file.seekg(position);
+
+    string doctorRecord = readDelimitedRecord(file);
+    if (!doctorRecord.empty()) {
+        istringstream iss(doctorRecord);
+        string id, name, address;
+        getline(iss, id, '|');
+        getline(iss, name, '|');
+        getline(iss, address, '|');
+
+        cout << "Doctor ID: " << id << "\n";
+    }
+
+    file.close();
+}
+void getMultipleIDs(const string& name) {
+
+    if (doctorSecondaryIndex.find(name) == doctorSecondaryIndex.end()) {
+        cout << "No doctors found with the name: " << name << endl;
+        return;
+    }
+
+    cout << "Doctors with the name " << name << ":\n";
+    for (const string& doctorId : doctorSecondaryIndex[name]) {
+        getIDs(doctorId);
+    }
+}
+void getAddresses(const string& doctorId) {
+    fstream file(DOCTOR_FILE);
+    if (!file) {
+        cerr << "Failed to open doctor file.\n";
+        return;
+    }
+
+    if (doctorPrimaryIndex.find(doctorId) == doctorPrimaryIndex.end()) {
+        cout << "Doctor not found.\n";
+        return;
+    }
+
+    long position = doctorPrimaryIndex[doctorId];
+    file.seekg(position);
+
+    string doctorRecord = readDelimitedRecord(file);
+    if (!doctorRecord.empty()) {
+        istringstream iss(doctorRecord);
+        string id, name, address;
+        getline(iss, id, '|');
+        getline(iss, name, '|');
+        getline(iss, address, '|');
+
+        cout << "Doctor address: " << address << "\n";
+    }
+
+    file.close();
+}
+void getMultipleaddress(const string& name) {
+
+    if (doctorSecondaryIndex.find(name) == doctorSecondaryIndex.end()) {
+        cout << "No doctors found with the name: " << name << endl;
+        return;
+    }
+
+    cout << "Doctors with the name " << name << ":\n";
+    for (const string& doctorId : doctorSecondaryIndex[name]) {
+        getAddresses(doctorId);
+    }
+}
+void searchAppointmentfordoctor(const string& appointmentId) {
+    fstream file(APP_FILE);
+    if (!file) {
+        cerr << "Failed to open appointment file.\n";
+        return;
+    }
+
+    if (appointmentPrimaryIndex.find(appointmentId) == appointmentPrimaryIndex.end()) {
+        cout << "Appointment not found.\n";
+        return;
+    }
+
+    long position = appointmentPrimaryIndex[appointmentId];
+    file.seekg(position);
+
+    string appointmentRecord = readDelimitedRecord(file);
+    if (!appointmentRecord.empty()) {
+        istringstream iss(appointmentRecord);
+        string id, date, doctorId;
+        getline(iss, id, '|');
+        getline(iss, date, '|');
+        getline(iss, doctorId, '|');
+
+        cout << "Appointment ID: " << id << "\n";
+
+    }
+
+    file.close();
+}
+void searchAppointment(const string& doctorId) {
+    if (appointmentSecondaryIndex.find(doctorId) == appointmentSecondaryIndex.end()) {
+        cout << "No appointments found for Doctor ID: " << doctorId << endl;
+        return;
+    }
+
+    cout << "Appointments for Doctor ID " << doctorId << ":\n";
+    for (const string& appointmentId : appointmentSecondaryIndex[doctorId]) {
+        searchAppointmentfordoctor(appointmentId);
+    }
+}
+void searchdoctorforappointment(const string& appointmentId) {
+    fstream file(APP_FILE);
+    if (!file) {
+        cerr << "Failed to open appointment file.\n";
+        return;
+    }
+
+    if (appointmentPrimaryIndex.find(appointmentId) == appointmentPrimaryIndex.end()) {
+        cout << "Appointment not found.\n";
+        return;
+    }
+
+    long position = appointmentPrimaryIndex[appointmentId];
+    file.seekg(position);
+
+    string appointmentRecord = readDelimitedRecord(file);
+    if (!appointmentRecord.empty()) {
+        istringstream iss(appointmentRecord);
+        string id, date, doctorId;
+        getline(iss, id, '|');
+        getline(iss, date, '|');
+        getline(iss, doctorId, '|');
+
+        cout << "doctor id: " << doctorId << "\n";
+
+    }
+
+    file.close();
+}
+void searchdoctor(const string& doctorId) {
+    if (appointmentSecondaryIndex.find(doctorId) == appointmentSecondaryIndex.end()) {
+        cout << "No appointments found for Doctor ID: " << doctorId << endl;
+        return;
+    }
+
+    cout << "Appointments for Doctor ID " << doctorId << ":\n";
+    for (const string& appointmentId : appointmentSecondaryIndex[doctorId]) {
+        searchdoctorforappointment(appointmentId);
+    }
+}
+
+
+void handleQuery(const string& query) {
+    // Convert query to lowercase for consistent parsing
+    string lowerQuery = query;
+    transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
+    // Basic format validation
+    size_t selectPos = lowerQuery.find("select");
+    size_t fromPos = lowerQuery.find("from");
+    size_t wherePos = lowerQuery.find("where");
+
+
+
+    // Extract sections of the query
+    string field = lowerQuery.substr(selectPos + 7, fromPos - (selectPos + 7)); // Text after "select " up to " from "
+    string tableName = lowerQuery.substr(fromPos + 5, wherePos - (fromPos + 6)); // Text after "from " up to " where "
+    string condition = lowerQuery.substr(wherePos + 6); // Text after "where "
+    trim(field);
+
+
+
+    // Validate the condition format
+    size_t equalPos = condition.find('=');
+    if (equalPos == string::npos) {
+        cout << "Invalid condition format.\n";
+        return;
+    }
+
+    string conditionField = condition.substr(0, equalPos);
+    string conditionValue = condition.substr(equalPos + 1);
+
+    // Ensure condition value has single quotes
+    if (conditionValue.front() == '\'' && conditionValue.back() == '\'') {
+        conditionValue = conditionValue.substr(1, conditionValue.length() - 2); // Remove surrounding quotes
+    } else {
+        cout << "Invalid condition value format (missing quotes).\n";
+        return;
+    }
+    // Dispatch based on table name and field
+    if (tableName == "doctors") {
+        if (conditionField == "doctor id") {
+            if (field == "all") {
+
+                searchDoctorByID(conditionValue);
+            } else {
+                fstream file(DOCTOR_FILE);
+                if (!file) {
+                    cerr << "Failed to open doctor file.\n";
+                    return;
+                }
+
+                if (doctorPrimaryIndex.find(conditionValue) == doctorPrimaryIndex.end()) {
+                    cout << "Doctor not found.\n";
+                    return;
+                }
+
+                long position = doctorPrimaryIndex[conditionValue];
+                file.seekg(position);
+                string doctorRecord = readDelimitedRecord(file);
+                if (!doctorRecord.empty()) {
+                    istringstream iss(doctorRecord);
+                    string id, name, address;
+                    getline(iss, id, '|');
+                    getline(iss, name, '|');
+                    getline(iss, address, '|');
+                    if (field=="doctor name") {
+                        cout << "Doctor Name: " << name << endl;
+                    }
+                    else if (field=="doctor address") {
+                        cout << "Doctor Address: " << address << endl;
+                    }
+                }
+                file.close();
+            }
+        }else if (conditionField=="doctor name") {
+            if (field == "all") {
+                searchDoctorByName(conditionValue);
+            }
+            else if (field=="doctor id") {
+                getMultipleIDs(conditionValue);
+            }
+            else if (field=="doctor address") {
+                getMultipleaddress(conditionValue);
+            }
+
+        }
+    } if (tableName == "appointments") {
+            if (conditionField == "doctor id") {
+                if (field == "all") {
+                    searchAppointmentByDoctor(conditionValue);
+                } else if (field == "appointment date") {
+                    getmultipledates(conditionValue);
+                }
+                else if (field=="appointment id") {
+                    searchAppointment(conditionValue);
+                }
+            } else if (conditionField == "appointment id") {
+                if (field == "all") {
+                    searchAppointmentByID(conditionValue);
+                } else if (field == "doctor id") {
+                    searchdoctor(conditionValue);
+                }
+                else if (field=="appointment date") {
+                    getdate(conditionValue);
+                }
+            } else {
+                cout << "Invalid condition field for Appointments table.\n";
+            }
+        }
+
+    }
+
+
+
+
 
 
 
@@ -690,6 +1011,7 @@ void menu() {
              << "8. Delete Appointment\n"
              << "9. Update Doctor Name\n"
              << "10. update appointment date\n"
+             << "11. query\n"
              << "0. exit\n"
              << "Enter your choice: ";
         cin >> choice;
@@ -770,6 +1092,15 @@ void menu() {
                 cin >> doctorId;
                 updateAppointmentDate(doctorId);
         }
+            break;
+            case 11:
+            {
+                string query;
+                cout << "Enter query: ";
+                cin.ignore();
+                getline(cin, query);
+                handleQuery(query);
+            }
             break;
         case 0:
         {
